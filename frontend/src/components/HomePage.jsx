@@ -25,9 +25,9 @@ const DEFAULT_STOCKS = [
     'SHABLY', 'PROSTARM', 'IRFC', 'TDPOWERSYS', 'BBOX', 'BLACKBUCK', 'EXIDEIND', 'ARE&M', 'COALINDIA', 'WAAREEENER', 'WAAREERTL', 'PREMIERENE', 'SWSOLAR',
     'TORNTPOWER', 'NTPCGREEN', 'EXICOM', 'HDBFS', 'CDSL', 'BSE', 'KFINTECH', 'MOTILALOFS', 'ANGELONE', 'ANANDRATHI', 'CAMS'
 ];
-const API_BASE_URL = 'http://localhost:3001/api';
+const API_BASE_URL = import.meta.env.BACKEND_URL ||  'http://localhost:3001/api';
 
-const HomePage = () => {
+const HomePage = () => { 
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [watchlists, setWatchlists] = useState([]);

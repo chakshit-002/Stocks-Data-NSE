@@ -13,7 +13,7 @@ import DeliveryAnalytics from './DeliveryAnalytics';
 
 // --- IMPORT CHART COMPONENT (Assuming it's in the same file or imported) ---
 
-const API_BASE_URL = 'http://localhost:3001/api';
+const API_BASE_URL = import.meta.env.BACKEND_URL || 'http://localhost:3001/api';
 
 const StockDetails = () => {
     const { symbol } = useParams();
