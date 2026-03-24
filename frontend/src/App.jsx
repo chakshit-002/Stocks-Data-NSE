@@ -10,7 +10,9 @@ import Mainroutes from './Routes/Mainroutes';
 function App() {
     return (
         <div>
-          <Mainroutes/>
+            <Header />
+            <Toaster position="top-right" />
+            <Mainroutes />
         </div>
     );
 }
