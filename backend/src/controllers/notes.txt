@@ -1,0 +1,35 @@
+toh mere working flow sunnoo 
+-> mei ek array banana chahta hu stock symbols/name ka backend mei aur usko frontend pr array default stocks naam se aee and isko edit add, ya delete stock symbols ya stocks name kr skuu
+->aur phir  jese hi default stocks naam ka array select kiya  mene toh then date select ki toh uss  date kaa data unn unn stocks ka default stocks array mei thae vo backend pr save hojae according to stocks symbol/date phir  next date ho toh vobhi ajae ese kr kr ke jitni bhi date select kru unka  data save hota jaee backend pr usshi stocks ka  dates ke according 
+syd ek se jyda schema banana pdh skta hai jo ki easy hoga 
+
+-> phir yadi mei search bar stock select kru toh  vo phle database mei select krega mil  gya toh uss symbol ke route pr bej dega mere jo ham create kege ki har stocks ki jo array mei hai unke  data ko show krne ke  liye alag alag routes  honge 
+
+-> aur agar nahi mila  data uss stock ka database mei  toh data not found in data base  yh ajaega popup  aur bole ki  date select kroo 
+
+-> ab stock  ka name and  date select kr li toh -> aur  vo database mei hai toh direct show hojaega wahi route  pr bej dega 
+-> nahi mila database  mei toh phir vo api pr  jaega uss date vaali and stock ko show krdega 
+aur ek button  bhi hoga jo  isko database mei save krwana hai ya nahi uske  liye 
+
+->  aur direct date pr click kr diya and search kr click  kr diya toh only by date toh
+api pr redirect krke puraa api  ka data ajaega 
+aur uss data ke aage add to database  krke button hoga vo save kr skega unn stocks ko 
+
+
+-> toh broo jese mei frontend pr stock search kruga
+
+aur vo stock mil jaega database mei
+
+then phir uss stock ke page mtlb route prchla jaeuga
+
+and frontend pr table ajae
+
+ki jese mene add kiye ho 10din ke uss stocks ki details toh
+
+jiss pattern se tum save krrhe ho vo
+
+uss only specific stocks ki details wahan frontend pr dihkaa dega kya ?
+
+like Reliance bola toh reliance ke 10 din ka data wahan table mei date ke according show hojae
+
+batao yh hoskta hai kya ?
