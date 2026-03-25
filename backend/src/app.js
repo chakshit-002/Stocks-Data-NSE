@@ -12,6 +12,14 @@ app.use(cors({
     credentials: true
 }));
 
+app.get('/', (req, res) => {
+    res.status(200).json({
+        status: 'UP',
+        message: 'Server is running smoothly',
+        timestamp: new Date()
+    });
+});
+
 app.use('/api', stockRoutes);
 app.use('/api', watchlistRoutes);
 
