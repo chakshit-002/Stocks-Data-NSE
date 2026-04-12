@@ -25,19 +25,37 @@ const DEFAULT_STOCKS = [
     'SHABLY', 'PROSTARM', 'IRFC', 'TDPOWERSYS', 'BBOX', 'BLACKBUCK', 'EXIDEIND', 'ARE&M', 'COALINDIA', 'WAAREEENER', 'WAAREERTL', 'PREMIERENE', 'SWSOLAR',
     'TORNTPOWER', 'NTPCGREEN', 'EXICOM', 'HDBFS', 'CDSL', 'BSE', 'KFINTECH', 'MOTILALOFS', 'ANGELONE', 'ANANDRATHI', 'CAMS'
 ];
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL ||  'http://localhost:3001/api';
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001/api';
 
-const HomePage = () => { 
+const HomePage = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [watchlists, setWatchlists] = useState([]);
 
     // const { register: registerBulk, handleSubmit: handleSubmitBulk, formState: { errors: errorsBulk } } = useForm();
     const { register: registerStock, handleSubmit: handleSubmitStock, formState: { errors: errorsStock } } = useForm();
-    const { register: registerOnDemand, handleSubmit: handleSubmitOnDemand, formState: { errors: errorsOnDemand } } = useForm();
+    const { register: registerOnDemand, handleSubmit: handleSubmitOnDemand, setValue: setValueOnDemand, formState: { errors: errorsOnDemand } } = useForm();
 
     const { register: registerBulk, handleSubmit: handleSubmitBulk, setValue: setBulkValue, watch: watchBulk, formState: { errors: errorsBulk } } = useForm();
     const bulkDates = watchBulk('dates', '');
+
+    // Existing states ke niche dalo
+    const [suggestions, setSuggestions] = useState([]);
+    const [activeSearch, setActiveSearch] = useState(null); // 'quick' or 'specific'
+
+    const handleSearchSuggestions = async (query) => {
+        if (query.length < 2) {
+            setSuggestions([]);
+            return;
+        }
+        try {
+            const res = await axios.get(`${API_BASE_URL}/search-symbols?q=${query}`);
+            setSuggestions(res.data);
+        } catch (err) {
+            console.error("Suggestion fetch failed");
+        }
+    };
+
 
     useEffect(() => {
         const fetchWatchlists = async () => {
@@ -167,6 +185,8 @@ const HomePage = () => {
                         <h2 className="text-xl font-bold text-white">Quick Analysis</h2>
                     </div>
                     <form onSubmit={handleSubmitStock(handleStockSearch)} className="space-y-4">
+
+                        {/* Card 2: Quick Search Section */}
                         <div>
                             <label className="block text-xs font-semibold text-slate-500 uppercase mb-2">Stock Symbol</label>
                             <div className="relative">
@@ -174,11 +194,35 @@ const HomePage = () => {
                                 <input
                                     type="text"
                                     {...registerStock('symbol', { required: 'Symbol is required' })}
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        registerStock('symbol').onChange(e); // react-hook-form sync
+                                        setActiveSearch('quick');
+                                        handleSearchSuggestions(val);
+                                    }}
+                                    autoComplete="off"
                                     className="w-full bg-[#0f172a] border border-slate-700 rounded-xl py-2.5 pl-10 pr-4 text-sm focus:ring-2 focus:ring-emerald-500 outline-none transition-all uppercase"
                                     placeholder="e.g. RELIANCE"
                                 />
+
+                                {/* Dropdown Logic */}
+                                {activeSearch === 'quick' && suggestions.length > 0 && (
+                                    <ul className="absolute z-50 w-full mt-2 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl max-h-48 overflow-y-auto">
+                                        {suggestions.map((s) => (
+                                            <li
+                                                key={s}
+                                                onClick={() => {
+                                                    handleSubmitStock((data) => handleStockSearch({ ...data, symbol: s }))();
+                                                    setSuggestions([]);
+                                                }}
+                                                className="px-4 py-2 hover:bg-emerald-600 cursor-pointer text-sm font-bold border-b border-slate-700 last:border-0"
+                                            >
+                                                {s}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
                             </div>
-                            {errorsStock.symbol && <p className="text-red-400 text-xs mt-1">{errorsStock.symbol.message}</p>}
                         </div>
                         <div className="h-[76px] flex items-end"> {/* Spacer to align buttons */}
                             <button className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-emerald-900/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
@@ -197,14 +241,45 @@ const HomePage = () => {
                     </div>
                     <form onSubmit={handleSubmitOnDemand(handleOnDemandFetchAndSave)} className="space-y-4">
                         <div className="grid grid-cols-2 gap-3">
+
+                            {/* Card 3: Symbol Input waala part */}
                             <div>
                                 <label className="block text-xs font-semibold text-slate-500 uppercase mb-2">Symbol</label>
-                                <input
-                                    type="text"
-                                    {...registerOnDemand('symbol', { required: 'Symbol is required' })}
-                                    className="w-full bg-[#0f172a] border border-slate-700 rounded-xl py-2.5 px-4 text-sm focus:ring-2 focus:ring-amber-500 outline-none uppercase transition-all"
-                                />
-                                {errorsOnDemand.symbol && <p className="text-red-400 text-xs mt-1">{errorsOnDemand.symbol.message}</p>}
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        {...registerOnDemand('symbol', { required: 'Symbol is required' })}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            registerOnDemand('symbol').onChange(e);
+                                            setActiveSearch('specific');
+                                            handleSearchSuggestions(val);
+                                        }}
+                                        autoComplete="off"
+                                        className="w-full bg-[#0f172a] border border-slate-700 rounded-xl py-2.5 px-4 text-sm focus:ring-2 focus:ring-amber-500 outline-none uppercase transition-all"
+                                    />
+
+                                    {/* Dropdown Logic */}
+                                    {activeSearch === 'specific' && suggestions.length > 0 && (
+                                        <ul className="absolute z-50 w-full mt-2 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl max-h-48 overflow-y-auto">
+                                            {suggestions.map((s) => (
+                                                <li
+                                                    key={s}
+                                                    onClick={() => {
+                                                        // 1. Box mein value set karo
+                                                        setValueOnDemand('symbol', s);
+                                                        // 2. Suggestions chhupao
+                                                        setSuggestions([]);
+                                                        setActiveSearch(null);
+                                                    }}
+                                                    className="px-4 py-2 hover:bg-amber-600 cursor-pointer text-sm font-bold border-b border-slate-700 last:border-0"
+                                                >
+                                                    {s}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    )}
+                                </div>
                             </div>
                             <div>
                                 <label className="block text-xs font-semibold text-slate-500 uppercase mb-2">Date</label>

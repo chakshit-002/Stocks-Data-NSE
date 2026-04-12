@@ -4,7 +4,8 @@ const {
     createWatchlist,
     getAllWatchlists,
     updateWatchlist,
-    deleteWatchlist
+    deleteWatchlist,
+    validateAndAdd
 } = require('../controllers/watchlist.controller');
 
 const router = express.Router();
@@ -14,6 +15,8 @@ router.post('/watchlists', createWatchlist);
 
 // yh vala Route to get all watchlists
 router.get('/watchlists', getAllWatchlists);
+
+router.post('/validate-symbol',validateAndAdd);
 
 //yh  update a specific watchlist by ID
 router.put('/watchlists/:id', updateWatchlist);

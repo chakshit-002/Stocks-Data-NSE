@@ -4,10 +4,10 @@ const watchlistRoutes = require('./routes/watchlist.route');
 
 const cors = require('cors');
 const app = express();
-
+const allowedOrigins = [process.env.FRONTEND_URL, "http://localhost:5173"];
 app.use(express.json());
 app.use(cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: allowedOrigins,
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
 }));

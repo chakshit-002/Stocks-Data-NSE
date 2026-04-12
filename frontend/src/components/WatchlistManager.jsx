@@ -39,24 +39,58 @@ const WatchlistManager = () => {
         }
     };
 
+    // 1. Create or Update with Validation
+    
     const handleCreateOrUpdateWatchlist = async (data) => {
         setLoading(true);
-        const symbolsArray = data.symbols.split(',').map(s => s.trim().toUpperCase()).filter(s => s);
+        const symbolsArray = data.symbols.split(',').map(s => s.trim().toUpperCase()).filter(s => s !== "");// Empty strings ko remove karne ke liye
+        
+        // Validation Toast start
+        const loadingToast = toast.loading(editingWatchlistId ? "Updating..." : "Validating symbols...");
+
         try {
+            // STEP 1: Symbols validation (Checking one by one)
+            for (let s of symbolsArray) {
+                try {
+                    await axios.post(`${API_BASE_URL}/validate-symbol`, { symbol: s });
+                } catch (err) {
+                    // Agar symbol invalid hai toh process yahin rok do
+                    toast.error(`Symbol '${s}' is invalid on NSE!`, { id: loadingToast });
+                    setLoading(false);
+                    return; 
+                }
+            }
+
+            // STEP 2: Proceed with Save/Update if all symbols are valid
             if (editingWatchlistId) {
                 await axios.put(`${API_BASE_URL}/watchlists/${editingWatchlistId}`, { symbols: symbolsArray });
-                toast.success('List Updated', { style: { borderRadius: '10px', background: '#1e293b', color: '#fff' } });
+                toast.success('List Updated', { id: loadingToast });
                 setEditingWatchlistId(null);
             } else {
                 await axios.post(`${API_BASE_URL}/watchlists`, { name: data.name, symbols: symbolsArray });
-                toast.success('List Created');
+                toast.success('List Created', { id: loadingToast });
             }
+            
             reset();
             fetchWatchlists();
         } catch (error) {
-            toast.error('Operation failed');
+            toast.error(error.response?.data?.error || 'Operation failed', { id: loadingToast });
         } finally {
             setLoading(false);
+        }
+    };
+
+    // 2. Delete Watchlist Function (Jo missing tha)
+    const handleDeleteWatchlist = async (id) => {
+        if (!window.confirm("Are you sure you want to delete this watchlist?")) return;
+        
+        const deleteToast = toast.loading("Deleting...");
+        try {
+            await axios.delete(`${API_BASE_URL}/watchlists/${id}`);
+            toast.success("Watchlist Deleted", { id: deleteToast });
+            fetchWatchlists(); // List refresh karne ke liye
+        } catch (error) {
+            toast.error("Delete failed", { id: deleteToast });
         }
     };
 
@@ -170,7 +204,7 @@ const WatchlistManager = () => {
                                         {/* Action Buttons (Top Right) */}
                                         <div className="absolute top-4 right-4 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <button onClick={() => startEditing(list)} className="p-2 hover:text-amber-400 text-slate-500 transition-colors"><Pencil size={16}/></button>
-                                            <button className="p-2 hover:text-red-400 text-slate-500 transition-colors"><Trash2 size={16}/></button>
+                                            <button onClick={() => handleDeleteWatchlist(list._id)} className="p-2 hover:text-red-400 text-slate-500 transition-colors"><Trash2 size={16}/></button>
                                         </div>
 
                                         <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">

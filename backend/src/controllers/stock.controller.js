@@ -2,7 +2,8 @@ const axios = require('axios');
 const csv = require('csv-parser');
 const moment = require('moment');
 const Stock = require('../models/stock.model');
-const Watchlist = require("../models/watchlist.model")
+const Watchlist = require("../models/watchlist.model");
+const SymbolMaster = require('../models/symbolMaster.model');
 const DEFAULT_STOCKS = [
     'TATAPOWER', 'ADANIPOWER', 'IREDA', 'PFC', 'RECLTD', 'NHPC', 'JSWENERGY', 'TITAGARH', 'IRCON', 'BEML', 'RITES', 'RVNL', 'JWL', 'RAILTEL', 'TEXRAIL', 'TRANSRAILL',
     'HAL', 'BEL', 'MAZDOCK', 'BDL', 'COCHINSHIP', 'GRSE', 'PARAS', 'ZENTEC', 'APOLLO', 'MTARTECH', 'DATAPATTNS', 'KRISHNADEF', 'CPPLUS', 'SYRMA', 'MICEL', 'AVALON',
@@ -55,7 +56,7 @@ const parseField = (row, fieldName, type = 'float') => {
 };
 
 
-exports.bulkSaveStocks = async (req, res) => {
+const bulkSaveStocks = async (req, res) => {
     const { dates, watchlistId } = req.body;
 
     if (!dates || !Array.isArray(dates) || dates.length === 0) {
@@ -113,11 +114,34 @@ exports.bulkSaveStocks = async (req, res) => {
                     totalSaved += bulkErr.insertedDocs?.length || 0;
                     totalSkipped += (bulkOps.length - (bulkErr.insertedDocs?.length || 0));
                 }
+
+
+                // 2. Ab Master List Sync Karo (Isi loop ke andar)
+                try {
+                    const currentSymbols = [...new Set(bulkOps.map(op => op.symbol))];
+                    const syncOps = currentSymbols.map(s => ({
+                        updateOne: {
+                            filter: { symbol: s },
+                            update: { $set: { symbol: s } }, // $set lagana achhi practice hai
+                            upsert: true
+                        }
+                    }));
+
+                    // Yahan variable name wahi rakho jo upar import kiya hai
+                    await SymbolMaster.bulkWrite(syncOps);
+                    console.log(`✅ Master List Synced for date: ${dateString}`);
+                } catch (syncErr) {
+                    console.error("❌ Master List Sync Failed:", syncErr.message);
+                }
+
             }
+
         } catch (dateErr) {
             errorLogs.push(`Date ${dateString} failed: ${dateErr.message}`);
         }
     }
+
+
 
     res.status(200).json({
         message: 'Process completed.',
@@ -130,7 +154,7 @@ exports.bulkSaveStocks = async (req, res) => {
 
 
 // Controller for getting a specific stock's historical data 
-exports.getHistoricalData = async (req, res) => {
+const getHistoricalData = async (req, res) => {
     const { symbol } = req.params;
 
     if (!symbol) {
@@ -153,7 +177,7 @@ exports.getHistoricalData = async (req, res) => {
 
 // Controller for on-demand fetch and save 
 
-exports.fetchAndSaveStock = async (req, res) => {
+const fetchAndSaveStock = async (req, res) => {
     const { symbol, date } = req.query;
 
     if (!symbol || !date) {
@@ -202,6 +226,13 @@ exports.fetchAndSaveStock = async (req, res) => {
     }
 };
 
+
+module.exports = {
+    fetchAndProcessData, 
+    fetchAndSaveStock,
+    getHistoricalData,
+    bulkSaveStocks
+}
 
 
 

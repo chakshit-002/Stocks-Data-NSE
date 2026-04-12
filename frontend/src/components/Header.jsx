@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Menu, X, Home, LayoutList, TrendingUp } from 'lucide-react'; // Lucide icons
 
 const Header = () => {
     const [isOpen, setIsOpen] = useState(false);
-
+    const navigate = useNavigate();
     const toggleMenu = () => {
         setIsOpen(!isOpen);
     };
@@ -14,11 +14,11 @@ const Header = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
                     {/* Logo Section */}
-                    <div className="flex items-center gap-2">
-                        <div className="bg-[#3b82f6] p-1.5 rounded-lg">
+                    <div className="flex items-center gap-2" >
+                        <div className="bg-[#3b82f6] p-1.5 rounded-lg cursor-pointer" onClick={() => navigate('/')}>
                             <TrendingUp size={20} className="text-white" />
                         </div>
-                        <span className="text-xl font-bold bg-gradient-to-r from-[#38bdf8] to-[#818cf8] bg-clip-text text-transparent">
+                        <span onClick={() => navigate('/')} className=" cursor-pointer text-xl font-bold bg-gradient-to-r from-[#38bdf8] to-[#818cf8] bg-clip-text text-transparent">
                             StockTracker
                         </span>
                     </div>
