@@ -13,7 +13,7 @@ function App() {
         <div>
             <Header />
             <Toaster position="top-right" />
-            {/* <KeepAlive/> */}
+            <KeepAlive/>
             <Mainroutes />
         </div>
     );
