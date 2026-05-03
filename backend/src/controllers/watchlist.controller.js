@@ -29,7 +29,9 @@ exports.createWatchlist = async (req, res) => {
 
         const newWatchlist = await Watchlist.create({
             name: name.trim(),
-            symbols: cleanSymbols
+            symbols: cleanSymbols,
+            owner: req.user.id,
+            isPublic: false
         });
 
         res.status(201).json(newWatchlist);
@@ -45,7 +47,12 @@ exports.createWatchlist = async (req, res) => {
 // Get all watchlists
 exports.getAllWatchlists = async (req, res) => {
     try {
-        const watchlists = await Watchlist.find({}).sort({ createdAt: -1 });
+        const watchlists = await Watchlist.find({
+            $or: [
+                { isPublic: true },
+                { owner: req.user.id }
+            ]
+        }).sort({ createdAt: -1 });
         res.status(200).json(watchlists || []);
     } catch (err) {
         console.error('Error fetching watchlists:', err.message);
@@ -63,7 +70,7 @@ exports.updateWatchlist = async (req, res) => {
             return res.status(400).json({ error: 'Symbols array is required for update.' });
         }
 
-      // Symbols ko clean karo (Trim, UpperCase, Unique)
+        // Symbols ko clean karo (Trim, UpperCase, Unique)
         const cleanSymbols = [...new Set(symbols
             .map(s => s?.toString().toUpperCase().trim())
             .filter(s => s && s.length > 0))];

@@ -13,6 +13,16 @@ const watchlistSchema = new mongoose.Schema({
         required: true,
         trim: true,
     }],
+
+    owner: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    isPublic: {
+        type: Boolean,
+        default: false
+    }
 }, {
     timestamps: true,
 });

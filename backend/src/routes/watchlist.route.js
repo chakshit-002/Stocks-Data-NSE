@@ -7,9 +7,10 @@ const {
     deleteWatchlist,
     validateAndAdd
 } = require('../controllers/watchlist.controller');
-
+const { protect } = require('../middleware/auth.middleware');
 const router = express.Router();
 
+router.use(protect);
 // yh create a new watchlist
 router.post('/watchlists', createWatchlist);
 

@@ -68,6 +68,9 @@ const bulkSaveStocks = async (req, res) => {
         // ... (aapka watchlist fetch logic sahi hai, bas symbols ko trim/uppercase kar lena)
         const watchlist = await Watchlist.findById(watchlistId);
         if (!watchlist) return res.status(404).json({ error: 'Watchlist not found.' });
+        if (!watchlist.isPublic && watchlist.owner.toString() !== req.user.id.toString()) {
+            return res.status(403).json({ error: 'Bhai ye teri watchlist nahi hai!' });
+        }
         stocksToFetch = watchlist.symbols.map(s => s.toUpperCase().trim());
     }
 
@@ -228,7 +231,7 @@ const fetchAndSaveStock = async (req, res) => {
 
 
 module.exports = {
-    fetchAndProcessData, 
+    fetchAndProcessData,
     fetchAndSaveStock,
     getHistoricalData,
     bulkSaveStocks
