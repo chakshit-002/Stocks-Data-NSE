@@ -1,16 +1,22 @@
 const express = require("express");
 const stockRoutes = require('./routes/stock.route');
 const watchlistRoutes = require('./routes/watchlist.route');
-
+const authRoutes = require('./routes/auth.route')
+const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const app = express();
 const allowedOrigins = [process.env.FRONTEND_URL, "http://localhost:5173"];
-app.use(express.json());
+
 app.use(cors({
     origin: allowedOrigins,
     methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+app.use(express.json());
+app.use(cookieParser());
+
 
 app.get('/', (req, res) => {
     res.status(200).json({
@@ -20,8 +26,8 @@ app.get('/', (req, res) => {
     });
 });
 
+app.use('/api/auth', authRoutes);
 app.use('/api', stockRoutes);
 app.use('/api', watchlistRoutes);
-
 
 module.exports = app;

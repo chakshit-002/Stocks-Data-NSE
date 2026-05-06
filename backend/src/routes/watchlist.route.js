@@ -7,7 +7,7 @@ const {
     deleteWatchlist,
     validateAndAdd
 } = require('../controllers/watchlist.controller');
-const { protect } = require('../middleware/auth.middleware');
+const { protect } = require('../middlewares/auth.middleware');
 const router = express.Router();
 
 router.use(protect);

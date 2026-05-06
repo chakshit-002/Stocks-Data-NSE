@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api/axios';
 import { toast } from 'react-hot-toast';
 import moment from 'moment';
 import { useForm } from 'react-hook-form';
@@ -30,9 +30,9 @@ const StockDetails = () => {
         const fetchAllData = async () => {
             setLoading(true);
             try {
-                const stockResponse = await axios.get(`${API_BASE_URL}/stocks/${symbol}`);
+                const stockResponse = await api.get(`${API_BASE_URL}/stocks/${symbol}`);
                 setStockData(stockResponse.data);
-                const watchlistResponse = await axios.get(`${API_BASE_URL}/watchlists`);
+                const watchlistResponse = await api.get(`${API_BASE_URL}/watchlists`);
                 setWatchlists(watchlistResponse.data);
             } catch (error) {
                 toast.error('Failed to fetch data.');
@@ -51,13 +51,13 @@ const StockDetails = () => {
         try {
             setLoading(true);
             if (newWatchlistName) {
-                const res = await axios.post(`${API_BASE_URL}/watchlists`, { name: newWatchlistName, symbols: [currentSymbol] });
+                const res = await api.post(`${API_BASE_URL}/watchlists`, { name: newWatchlistName, symbols: [currentSymbol] });
                 targetWatchlistId = res.data._id;
                 toast.success(`Created & Added to ${newWatchlistName}`);
             } else if (targetWatchlistId) {
                 const selected = watchlists.find(wl => wl._id === targetWatchlistId);
                 if (selected && !selected.symbols.includes(currentSymbol)) {
-                    await axios.put(`${API_BASE_URL}/watchlists/${targetWatchlistId}`, { symbols: [...selected.symbols, currentSymbol] });
+                    await api.put(`${API_BASE_URL}/watchlists/${targetWatchlistId}`, { symbols: [...selected.symbols, currentSymbol] });
                     toast.success(`Added to ${selected.name}`);
                 } else {
                     toast.error('Already in watchlist');
@@ -65,7 +65,7 @@ const StockDetails = () => {
             }
             setShowAddModal(false);
             reset();
-            const updatedWL = await axios.get(`${API_BASE_URL}/watchlists`);
+            const updatedWL = await api.get(`${API_BASE_URL}/watchlists`);
             setWatchlists(updatedWL.data);
         } catch (error) {
             toast.error('Action failed');

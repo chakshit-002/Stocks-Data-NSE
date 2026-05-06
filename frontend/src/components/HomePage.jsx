@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
+
 import { toast } from 'react-hot-toast';
 import MultiDatePicker from './MultiDatePicker'
 import {
@@ -14,6 +14,8 @@ import {
     Activity,
     Layout
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext'; // 1. Hook import karo
+import api from '../api/axios';
 
 const DEFAULT_STOCKS = [
     'TATAPOWER', 'ADANIPOWER', 'IREDA', 'PFC', 'RECLTD', 'NHPC', 'JSWENERGY', 'TITAGARH',
@@ -31,6 +33,7 @@ const HomePage = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [watchlists, setWatchlists] = useState([]);
+    const { user, loading: authLoading } = useAuth();
 
     // const { register: registerBulk, handleSubmit: handleSubmitBulk, formState: { errors: errorsBulk } } = useForm();
     const { register: registerStock, handleSubmit: handleSubmitStock, formState: { errors: errorsStock } } = useForm();
@@ -49,7 +52,7 @@ const HomePage = () => {
             return;
         }
         try {
-            const res = await axios.get(`${API_BASE_URL}/search-symbols?q=${query}`);
+            const res = await api.get(`${API_BASE_URL}/search-symbols?q=${query}`);
             setSuggestions(res.data);
         } catch (err) {
             console.error("Suggestion fetch failed");
@@ -60,16 +63,27 @@ const HomePage = () => {
     useEffect(() => {
         const fetchWatchlists = async () => {
             try {
-                const response = await axios.get(`${API_BASE_URL}/watchlists`);
+                const response = await api.get(`${API_BASE_URL}/watchlists`);
                 setWatchlists(response.data);
             } catch (error) {
                 toast.error(error.response?.data?.error || 'Failed to fetch watchlists.');
             }
         };
-        fetchWatchlists();
-    }, []);
+        if (user) { //  Sirf tab fetch karo jab user login ho
+            fetchWatchlists();
+        }
+    }, [user]);
 
     const handleBulkSave = async (data) => {
+
+        if (!user) {
+            toast.error('Bhai, pehle login toh kar lo tabhi toh data sync hoga!', {
+                icon: '🔒',
+            });
+            navigate('/login'); // Optional: redirect to login
+            return;
+        }
+
         setLoading(true);
         const dates = data.dates.split(',').map(d => d.trim()).filter(d => d);
         if (dates.length === 0) {
@@ -81,7 +95,7 @@ const HomePage = () => {
         if (data.watchlistId) payload.watchlistId = data.watchlistId;
 
         try {
-            const response = await axios.post(`${API_BASE_URL}/bulk-save`, payload);
+            const response = await api.post(`${API_BASE_URL}/bulk-save`, payload);
             toast.success(response.data.message);
         } catch (error) {
             toast.error(error.response?.data?.error || 'Failed to save data.');
@@ -91,14 +105,27 @@ const HomePage = () => {
     };
 
     const handleStockSearch = (data) => {
+
+        if (!user) {
+            toast.error('Stocks analyze karne ke liye login zaroori hai bhai!');
+            navigate('/login');
+            return;
+        }
         navigate(`/stocks/${data.symbol}`);
     };
 
     const handleOnDemandFetchAndSave = async (data) => {
+
+        if (!user) {
+            toast.error('Specific data fetch karne ke liye login karo pehle.');
+            navigate('/login');
+            return;
+        }
+
         const { symbol, date } = data;
         setLoading(true);
         try {
-            const response = await axios.get(`${API_BASE_URL}/fetch-and-save?symbol=${symbol}&date=${date}`);
+            const response = await api.get(`${API_BASE_URL}/fetch-and-save?symbol=${symbol}&date=${date}`);
             toast.success(response.data.message);
         } catch (error) {
             toast.error(error.response?.data?.error || 'Failed to fetch and save data.');
@@ -121,9 +148,15 @@ const HomePage = () => {
                 <p className="text-slate-400 text-lg max-w-2xl mx-auto">
                     Analyze, fetch, and synchronize NSE market data with a single click.
                 </p>
+                  {user ? (
+                    <h1>Welcome, {user.name}</h1>
+                ) : (
+                    <h1 className='text-center'>Please login to see your watchlists</h1>
+                )}
             </div>
 
             <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
+              
 
                 {/* Card 1: Bulk Sync - Updated UI */}
                 <div className="bg-[#1e293b] border border-slate-800 rounded-2xl p-6 shadow-xl hover:border-slate-700 transition-all">
@@ -170,7 +203,7 @@ const HomePage = () => {
 
                         <button
                             disabled={loading}
-                            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
+                            className={`w-full ${!user?'bg-blue-600 cursor-not-allowed':'bg-blue-600 hover:bg-blue-500'} text-white font-bold py-3 rounded-xl shadow-lg transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2`}
                         >
                             {loading ? <span className="animate-spin text-lg">🌀</span> : <Zap size={18} />}
                             {loading ? 'Syncing...' : 'Sync Bulk Data'}
@@ -225,7 +258,7 @@ const HomePage = () => {
                             </div>
                         </div>
                         <div className="h-[76px] flex items-end"> {/* Spacer to align buttons */}
-                            <button className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-emerald-900/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+                            <button className={`w-full ${!user ? ' bg-emerald-600 cursor-not-allowed' : ' bg-emerald-600 hover:bg-emerald-500'} text-white font-bold py-3 rounded-xl shadow-lg shadow-emerald-900/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2`}>
                                 <Search size={18} />
                                 View Charts & Data
                             </button>
@@ -294,7 +327,7 @@ const HomePage = () => {
                         </div>
                         <button
                             disabled={loading}
-                            className="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-amber-900/20 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
+                            className={`w-full ${!user ? 'bg-amber-600  cursor-not-allowed':'bg-amber-600 hover:bg-amber-500'} text-white font-bold py-3 rounded-xl shadow-lg shadow-amber-900/20 transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2`}
                         >
                             {loading ? 'Processing...' : 'Force Sync Now'}
                         </button>
@@ -303,7 +336,8 @@ const HomePage = () => {
             </div>
 
             {/* Default Stocks Grid Section */}
-            <div className="max-w-7xl mx-auto bg-[#1e293b]/50 border border-slate-800 rounded-2xl p-6 md:p-8">
+          {user?(
+              <div className="max-w-7xl mx-auto bg-[#1e293b]/50 border border-slate-800 rounded-2xl p-6 md:p-8">
                 <div className="flex items-center justify-between mb-8">
                     <h2 className="text-2xl font-bold text-white flex items-center gap-3">
                         <Layout className="text-blue-400" />
@@ -330,6 +364,11 @@ const HomePage = () => {
                     ))}
                 </div>
             </div>
+          ) :
+            <div className='flex justify-center'>
+                Default Stocks will be seen at Login
+            </div>
+          }
         </div>
     );
 };

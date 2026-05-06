@@ -2,15 +2,15 @@ const express = require('express');
 const router = express.Router(); 
 const stockController = require('../controllers/stock.controller'); 
 const symbolMasterModel = require('../models/symbolMaster.model');
-
+const { protect } = require('../middlewares/auth.middleware');
 // yh Route  bulk saving default stocks ke liye hai
-router.post('/bulk-save', stockController.bulkSaveStocks); 
+router.post('/bulk-save',protect, stockController.bulkSaveStocks); 
 
 // yh Route  historical data of a specific stock laane ke liye hai....
 router.get('/stocks/:symbol', stockController.getHistoricalData); 
 
 //yh vala  Route for on-demand fetch and save (search bar with date and symbol) 
-router.get('/fetch-and-save', stockController.fetchAndSaveStock); 
+router.get('/fetch-and-save',protect, stockController.fetchAndSaveStock); 
 
 // GET /api/search-symbols?q=IR
 router.get('/search-symbols', async (req, res) => {

@@ -3,9 +3,10 @@ const User = require('../models/user.model');
 
 exports.protect = async (req, res, next) => {
     try {
-        let token;
-        if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-            token = req.headers.authorization.split(' ')[1];
+        let token = req.cookies.token; // Pehle cookie check karo
+
+        if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+            token = req.headers.authorization.split(' ')[1]; // Phir header check karo
         }
 
         if (!token) {
@@ -14,8 +15,9 @@ exports.protect = async (req, res, next) => {
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         req.user = await User.findById(decoded.id).select('-password');
+        console.log("Cookies Header in Request:", req.headers.cookie);
         next();
     } catch (err) {
-        res.status(401).json({ error: 'Token invalid hai, firse login karo.' });
+        res.status(401).json({ error: 'Session expired, login again.' });
     }
 };

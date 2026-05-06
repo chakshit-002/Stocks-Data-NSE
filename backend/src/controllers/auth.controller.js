@@ -5,6 +5,8 @@ const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' });
 };
 
+// src/controllers/auth.controller.js
+
 exports.register = async (req, res) => {
     const { name, email, password } = req.body;
     try {
@@ -12,8 +14,18 @@ exports.register = async (req, res) => {
         if (userExists) return res.status(400).json({ error: 'Email already registered' });
 
         const user = await User.create({ name, email, password });
+        const token = generateToken(user._id);
+
+        // --- COOKIE SET KARO ---
+        res.cookie('token', token, {
+            httpOnly: true, // Sabse important: JS ise access nahi kar payegi (XSS protection)
+            secure: false,  // Development mein false rakho, production (HTTPS) mein true
+            maxAge: 30 * 24 * 60 * 60 * 1000, // 30 din
+            sameSite: 'lax' // Cross-site request protection
+        });
+
         res.status(201).json({
-            token: generateToken(user._id),
+            message: "User registered and logged in",
             user: { id: user._id, name: user.name, email: user.email }
         });
     } catch (err) {
@@ -26,8 +38,18 @@ exports.login = async (req, res) => {
     try {
         const user = await User.findOne({ email });
         if (user && (await user.comparePassword(password))) {
+            const token = generateToken(user._id);
+
+            // Cookie mein token set kar rahe hain
+            res.cookie('token', token, {
+                httpOnly: true, // Frontend JS ise read nahi kar payegi (Secure)
+                secure: process.env.NODE_ENV === 'production', // Sirf HTTPS par chalega
+                maxAge: 30 * 24 * 60 * 60 * 1000 ,// 30 din,
+                  sameSite: 'lax'
+            });
+
             res.json({
-                token: generateToken(user._id),
+                message: "Logged in successfully",
                 user: { id: user._id, name: user.name, email: user.email }
             });
         } else {
@@ -36,4 +58,21 @@ exports.login = async (req, res) => {
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
+};
+
+// auth.controller.js
+exports.getMe = async (req, res) => {
+    // req.user humein protect middleware se mil jayega
+    res.json({ user: req.user });
+};
+
+exports.logout = (req, res) => {
+    // Cookie ko clear karo
+    res.clearCookie('token', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax'
+    });
+
+    res.status(200).json({ message: 'Logged out successfully! Fir milenge bhai.' });
 };

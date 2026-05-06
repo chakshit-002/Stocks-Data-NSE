@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../api/axios';
 import { toast } from 'react-hot-toast';
 import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
@@ -30,7 +30,7 @@ const WatchlistManager = () => {
     const fetchWatchlists = async () => {
         setLoading(true);
         try {
-            const response = await axios.get(`${API_BASE_URL}/watchlists`);
+            const response = await api.get(`${API_BASE_URL}/watchlists`);
             setWatchlists(response.data);
         } catch (error) {
             toast.error(error.response?.data?.error || 'Failed to fetch.');
@@ -52,7 +52,7 @@ const WatchlistManager = () => {
             // STEP 1: Symbols validation (Checking one by one)
             for (let s of symbolsArray) {
                 try {
-                    await axios.post(`${API_BASE_URL}/validate-symbol`, { symbol: s });
+                    await api.post(`${API_BASE_URL}/validate-symbol`, { symbol: s });
                 } catch (err) {
                     // Agar symbol invalid hai toh process yahin rok do
                     toast.error(`Symbol '${s}' is invalid on NSE!`, { id: loadingToast });
@@ -63,11 +63,11 @@ const WatchlistManager = () => {
 
             // STEP 2: Proceed with Save/Update if all symbols are valid
             if (editingWatchlistId) {
-                await axios.put(`${API_BASE_URL}/watchlists/${editingWatchlistId}`, { symbols: symbolsArray });
+                await api.put(`${API_BASE_URL}/watchlists/${editingWatchlistId}`, { symbols: symbolsArray });
                 toast.success('List Updated', { id: loadingToast });
                 setEditingWatchlistId(null);
             } else {
-                await axios.post(`${API_BASE_URL}/watchlists`, { name: data.name, symbols: symbolsArray });
+                await api.post(`${API_BASE_URL}/watchlists`, { name: data.name, symbols: symbolsArray });
                 toast.success('List Created', { id: loadingToast });
             }
             
@@ -86,7 +86,7 @@ const WatchlistManager = () => {
         
         const deleteToast = toast.loading("Deleting...");
         try {
-            await axios.delete(`${API_BASE_URL}/watchlists/${id}`);
+            await api.delete(`${API_BASE_URL}/watchlists/${id}`);
             toast.success("Watchlist Deleted", { id: deleteToast });
             fetchWatchlists(); // List refresh karne ke liye
         } catch (error) {
