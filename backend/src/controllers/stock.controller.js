@@ -4,6 +4,7 @@ const moment = require('moment');
 const Stock = require('../models/stock.model');
 const Watchlist = require("../models/watchlist.model");
 const SymbolMaster = require('../models/symbolMaster.model');
+const symbolMasterModel = require('../models/symbolMaster.model');
 const DEFAULT_STOCKS = [
     'TATAPOWER', 'ADANIPOWER', 'IREDA', 'PFC', 'RECLTD', 'NHPC', 'JSWENERGY', 'TITAGARH', 'IRCON', 'BEML', 'RITES', 'RVNL', 'JWL', 'RAILTEL', 'TEXRAIL', 'TRANSRAILL',
     'HAL', 'BEL', 'MAZDOCK', 'BDL', 'COCHINSHIP', 'GRSE', 'PARAS', 'ZENTEC', 'APOLLO', 'MTARTECH', 'DATAPATTNS', 'KRISHNADEF', 'CPPLUS', 'SYRMA', 'MICEL', 'AVALON',
@@ -157,6 +158,31 @@ const bulkSaveStocks = async (req, res) => {
 
 
 // Controller for getting a specific stock's historical data 
+// const getHistoricalData = async (req, res) => {
+//     const { symbol } = req.params;
+
+//     if (!symbol) {
+//         return res.status(400).json({ error: 'Stock symbol is required.' });
+//     }
+
+//     try {
+//         const symbolInMaster = await symbolMasterModel.find({symbol:symbol.toUpperCase()});
+//         if(!symbolInMaster){
+            
+//         }
+//         const stockHistory = await Stock.find({ symbol: symbol.toUpperCase() }).sort({ date: 1 });
+
+//         if (stockHistory.length > 0) {
+//             res.json(stockHistory);
+//         } else {
+//             res.status(404).json({ message: 'Stock data not found in database.' });
+//         }
+//     } catch (err) {
+//         console.error('Error fetching historical data:', err.message);
+//         res.status(500).json({ error: 'Failed to fetch historical data.' });
+//     }
+// };
+
 const getHistoricalData = async (req, res) => {
     const { symbol } = req.params;
 
@@ -164,20 +190,38 @@ const getHistoricalData = async (req, res) => {
         return res.status(400).json({ error: 'Stock symbol is required.' });
     }
 
+    const upperSymbol = symbol.toUpperCase().trim();
+
     try {
-        const stockHistory = await Stock.find({ symbol: symbol.toUpperCase() }).sort({ date: 1 });
+        // STEP 1: Check karo ki symbol Master Model mein exist karta hai ya nahi
+        // Note: .findOne use karo taaki object mile, .find array return karta hai
+        const symbolInMaster = await symbolMasterModel.findOne({ symbol: upperSymbol });
+
+        if (!symbolInMaster) {
+            // Agar Master List mein hi nahi hai, toh matlab symbol hi galat hai
+            return res.status(404).json({ 
+                error: `Symbol '${upperSymbol}' not found! Please check the spelling.` 
+            });
+        }
+
+        // STEP 2: Agar symbol valid hai, toh historical data find karo
+        const stockHistory = await Stock.find({ symbol: upperSymbol }).sort({ date: 1 });
 
         if (stockHistory.length > 0) {
+            // Data mil gaya toh bhej do
             res.json(stockHistory);
         } else {
-            res.status(404).json({ message: 'Stock data not found in database.' });
+            // STEP 3: Symbol valid hai (Master mein hai) par data 0 hai
+            res.status(404).json({ 
+                message: `Stock data for '${upperSymbol}' not found in database. Please fetch data first.` 
+            });
         }
+
     } catch (err) {
         console.error('Error fetching historical data:', err.message);
         res.status(500).json({ error: 'Failed to fetch historical data.' });
     }
 };
-
 // Controller for on-demand fetch and save 
 
 const fetchAndSaveStock = async (req, res) => {

@@ -2,6 +2,7 @@ const express = require("express");
 const stockRoutes = require('./routes/stock.route');
 const watchlistRoutes = require('./routes/watchlist.route');
 const authRoutes = require('./routes/auth.route')
+const newsRoutes = require('./routes/news.route');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const app = express();
@@ -27,6 +28,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/news', newsRoutes);
 app.use('/api', stockRoutes);
 app.use('/api', watchlistRoutes);
 

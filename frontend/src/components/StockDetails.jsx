@@ -10,8 +10,10 @@ import {
     Activity
 } from 'lucide-react';
 import DeliveryAnalytics from './DeliveryAnalytics';
+// import NewsCard from './NewsCard';
+import NewsSection from './NewsSection';
 
-// --- IMPORT CHART COMPONENT (Assuming it's in the same file or imported) ---
+
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001/api';
 
@@ -25,6 +27,7 @@ const StockDetails = () => {
     const [activeTab, setActiveTab] = useState('analytics'); // NEW: For toggling Graph/Table
     const isMobile = window.innerWidth < 768;
     const { register, handleSubmit, reset } = useForm();
+    const [visibleCount, setVisibleCount] = useState(6);
 
     useEffect(() => {
         const fetchAllData = async () => {
@@ -34,8 +37,10 @@ const StockDetails = () => {
                 setStockData(stockResponse.data);
                 const watchlistResponse = await api.get(`${API_BASE_URL}/watchlists`);
                 setWatchlists(watchlistResponse.data);
-            } catch (error) {
-                toast.error('Failed to fetch data.');
+            } catch (err) {
+                const errorMsg = err.response?.data?.error || err.response?.data?.message || "Failed to Fetch data";
+
+                toast.error(errorMsg)
             } finally {
                 setLoading(false);
             }
@@ -81,7 +86,11 @@ const StockDetails = () => {
             </div>
         );
     }
-    console.log(stockData);
+
+    const showMoreCard = () => {
+        setVisibleCount(prev => prev + 6); // Har click par 6 aur badha do
+    };
+    // console.log(stockData);
     return (
         <div className="min-h-screen bg-[#0f172a] text-slate-200 pb-24 md:pb-8 font-sans">
             <div className="max-w-7xl mx-auto p-4 md:p-8">
@@ -106,10 +115,10 @@ const StockDetails = () => {
 
                 {/* Stock Title Card */}
                 {/* Stock Title Card & Tab Switcher */}
-                <div className="bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-[2rem] md:rounded-[3rem] p-4 md:p-8 mb-6 md:mb-10 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] flex flex-col md:flex-row justify-between items-center gap-6 md:gap-8">
+                <div className="bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-[2rem] md:rounded-[3rem] p-4 md:p-8 mb-6 md:mb-10 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)] flex flex-col lg:flex-row justify-between items-center gap-6 md:gap-8">
 
                     {/* Symbol Section */}
-                    <div className="flex items-center gap-4 md:gap-6 w-full md:w-auto group">
+                    <div className="flex items-center gap-4 md:gap-6 w-full lg:w-auto group">
                         <div className="relative">
                             {/* Outer Glow Effect */}
                             <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-[1.5rem] blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
@@ -177,8 +186,8 @@ const StockDetails = () => {
                             {stockData.length === 0 ? (
                                 <p className="text-center text-slate-500 italic">No data found.</p>
                             ) : (
-                                stockData.map((data, index) => (
-                                    <div key={index} className="bg-[#1e293b] border border-slate-800 rounded-2xl p-5 shadow-lg">
+                                stockData.slice(0, visibleCount).map((data, index) => (
+                                    <div key={index} className="bg-[#1e293b] border border-slate-800 rounded-2xl p-5 shadow-lg ">
                                         <div className="flex justify-between items-center mb-4 border-b border-slate-700/50 pb-3">
                                             <span className="text-blue-400 font-bold">{moment(data.date).format('DD MMM YYYY')}</span>
                                             <span className={`text-[10px] px-2 py-1 rounded-full font-bold uppercase ${parseFloat(data.deliveryPercent) > 50 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-700 text-slate-300'
@@ -215,59 +224,79 @@ const StockDetails = () => {
                                     </div>
                                 ))
                             )}
+
+                            {stockData.length > visibleCount && (
+                                <div className="mt-10 text-center">
+                                    <button
+                                        onClick={showMoreCard}
+                                        className="bg-slate-800 hover:bg-slate-700 text-blue-400 px-8 py-3 rounded-xl font-bold border border-slate-700 transition-all active:scale-95"
+                                    >
+                                        Show More Card
+                                    </button>
+                                    <p className="text-slate-500 text-xs mt-3">
+                                        Showing {visibleCount} of {stockData.length} articles
+                                    </p>
+                                </div>
+                            )}
                         </div>
 
                         {/* Desktop View: Clean Table */}
-                        <div className="hidden lg:block bg-[#1e293b] border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-                            <table className="w-full text-left border-collapse">
-                                <thead>
-                                    <tr className="bg-[#0f172a] border-b border-slate-800">
-                                        <th className="p-4 text-xs font-semibold text-slate-500 uppercase">Date</th>
-                                        <th className="p-4 text-xs font-semibold text-slate-500 uppercase">Open - Close</th>
-                                        <th className="p-4 text-xs font-semibold text-slate-500 uppercase">High - Low</th>
-                                        <th className="p-4 text-xs font-semibold text-slate-500 uppercase text-center">Trades</th>
-                                        <th className="p-4 text-xs font-semibold text-slate-500 uppercase text-right">Turnover (L)</th>
-                                        <th className="p-4 text-xs font-semibold text-slate-500 uppercase text-right">Total Volume</th>
-                                        <th className="p-4 text-xs font-semibold text-slate-500 uppercase text-right">Deliv. Volume</th>
-                                        <th className="p-4 text-xs font-semibold text-slate-500 uppercase text-right">Delivery %</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-800">
-                                    {stockData.map((data, index) => (
-                                        <tr key={index} className="hover:bg-slate-800/50 transition-colors group">
-                                            <td className="p-4 text-sm font-medium text-blue-400">
-                                                {moment(data.date).format('DD-MM-YYYY')}
-                                            </td>
-                                            <td className="p-4 text-sm">
-                                                <span className="text-slate-300">{data.open}</span>
-                                                <ChevronRight size={12} className="inline mx-2 text-slate-600" />
-                                                <span className="text-white font-semibold">{data.close}</span>
-                                            </td>
-                                            <td className="p-4 text-sm text-slate-400">
-                                                {data.high} / {data.low}
-                                            </td>
-                                            <td className="p-4 text-sm text-center text-slate-300">
-                                                {data.noOfTrade.toLocaleString()}
-                                            </td>
-                                            <td className="p-4 text-sm text-right text-emerald-400 font-mono">
-                                                {data.turnOverLac}
-                                            </td>
-                                            <td className="p-4 text-sm text-right text-slate-300 font-mono">
-                                                {data.volume.toLocaleString()}
-                                            </td>
-                                            <td className="p-4 text-sm text-right text-indigo-400 font-mono">
-                                                {data.delivery.toLocaleString()}
-                                            </td>
-                                            <td className="p-4 text-sm text-right">
-                                                <span className={`px-2 py-1 rounded-md text-xs font-bold ${parseFloat(data.deliveryPercent) > 50 ? 'bg-emerald-500/10 text-emerald-500' : 'bg-slate-700 text-slate-300'
-                                                    }`}>
-                                                    {data.deliveryPercent}%
-                                                </span>
-                                            </td>
+                        <div className="hidden lg:block bg-[#1e293b] border border-slate-800 rounded-2xl overflow-hidden  shadow-xl">
+                            <div className="overflow-y-auto max-h-[600px] scrollbar-hide">
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="bg-[#0f172a] border-b border-slate-800 sticky top-0 z-10">
+                                            <th className="p-4 text-xs font-semibold text-slate-500 uppercase">Date</th>
+                                            <th className=" p-4 text-xs font-semibold text-slate-500 uppercase">Open - Close</th>
+                                            <th className=" p-4 text-xs font-semibold text-slate-500 uppercase">High - Low</th>
+                                            <th className=" p-4 text-xs font-semibold text-slate-500 uppercase text-center">Trades</th>
+                                            <th className=" p-4 text-xs font-semibold text-slate-500 uppercase text-right">Turnover (L)</th>
+                                            <th className=" p-4 text-xs font-semibold text-slate-500 uppercase text-right">Total Volume</th>
+                                            <th className=" p-4 text-xs font-semibold text-slate-500 uppercase text-right">Deliv. Volume</th>
+                                            <th className=" p-4 text-xs font-semibold text-slate-500 uppercase text-right">Delivery %</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-800">
+                                        {stockData.length === 0 ? (
+                                            <p className="text-center text-slate-500 italic">No data found.</p>
+                                        ) : (
+                                            stockData.map((data, index) => (
+                                                <tr key={index} className="hover:bg-slate-800/50 transition-colors group">
+                                                    <td className="p-4 text-sm font-medium text-blue-400">
+                                                        {moment(data.date).format('DD-MM-YYYY')}
+                                                    </td>
+                                                    <td className="p-4 text-sm">
+                                                        <span className="text-slate-300">{data.open}</span>
+                                                        <ChevronRight size={12} className="inline mx-2 text-slate-600" />
+                                                        <span className="text-white font-semibold">{data.close}</span>
+                                                    </td>
+                                                    <td className="p-4 text-sm text-slate-400">
+                                                        {data.high} / {data.low}
+                                                    </td>
+                                                    <td className="p-4 text-sm text-center text-slate-300">
+                                                        {data.noOfTrade.toLocaleString()}
+                                                    </td>
+                                                    <td className="p-4 text-sm text-right text-emerald-400 font-mono">
+                                                        {data.turnOverLac}
+                                                    </td>
+                                                    <td className="p-4 text-sm text-right text-slate-300 font-mono">
+                                                        {data.volume.toLocaleString()}
+                                                    </td>
+                                                    <td className="p-4 text-sm text-right text-indigo-400 font-mono">
+                                                        {data.delivery.toLocaleString()}
+                                                    </td>
+                                                    <td className="p-4 text-sm text-right">
+                                                        <span className={`px-2 py-1 rounded-md text-xs font-bold ${parseFloat(data.deliveryPercent) > 50 ? 'bg-emerald-500/10 text-emerald-500' : 'bg-slate-700 text-slate-300'
+                                                            }`}>
+                                                            {data.deliveryPercent}%
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -321,6 +350,10 @@ const StockDetails = () => {
                     </div>
                 </div>
             )}
+
+            <div className='max-w-7xl mx-auto p-10'>
+                <NewsSection symbol={symbol} />
+            </div>
         </div>
     );
 };
