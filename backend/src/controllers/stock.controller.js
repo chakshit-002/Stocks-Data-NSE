@@ -22,7 +22,16 @@ const dataURL = process.env.DATA_FETCH_URL;
 const fetchAndProcessData = async (date) => {
     const url = dataURL.replace('{{DATE}}', date);
     try {
-        const response = await axios.get(url, { responseType: 'stream' });
+        const response = await axios.get(url, {
+            responseType: 'stream', 
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': '*/*',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'Connection': 'keep-alive',
+                'Cookie': '' // NSE ko kabhi-kabhi khali cookie ya pre-fetched cookie chahiye hoti hai
+            }
+        });
         const results = [];
         return new Promise((resolve, reject) => {
             response.data
@@ -168,7 +177,7 @@ const bulkSaveStocks = async (req, res) => {
 //     try {
 //         const symbolInMaster = await symbolMasterModel.find({symbol:symbol.toUpperCase()});
 //         if(!symbolInMaster){
-            
+
 //         }
 //         const stockHistory = await Stock.find({ symbol: symbol.toUpperCase() }).sort({ date: 1 });
 
@@ -199,8 +208,8 @@ const getHistoricalData = async (req, res) => {
 
         if (!symbolInMaster) {
             // Agar Master List mein hi nahi hai, toh matlab symbol hi galat hai
-            return res.status(404).json({ 
-                error: `Symbol '${upperSymbol}' not found! Please check the spelling.` 
+            return res.status(404).json({
+                error: `Symbol '${upperSymbol}' not found! Please check the spelling.`
             });
         }
 
@@ -212,8 +221,8 @@ const getHistoricalData = async (req, res) => {
             res.json(stockHistory);
         } else {
             // STEP 3: Symbol valid hai (Master mein hai) par data 0 hai
-            res.status(404).json({ 
-                message: `Stock data for '${upperSymbol}' not found in database. Please fetch data first.` 
+            res.status(404).json({
+                message: `Stock data for '${upperSymbol}' not found in database. Please fetch data first.`
             });
         }
 
