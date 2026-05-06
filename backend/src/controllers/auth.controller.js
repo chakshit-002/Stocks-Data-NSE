@@ -21,7 +21,7 @@ exports.register = async (req, res) => {
             httpOnly: true, // Sabse important: JS ise access nahi kar payegi (XSS protection)
             secure: false,  // Development mein false rakho, production (HTTPS) mein true
             maxAge: 30 * 24 * 60 * 60 * 1000, // 30 din
-            sameSite: 'lax' // Cross-site request protection
+            sameSite: 'none' // Cross-site request protection
         });
 
         res.status(201).json({
@@ -45,7 +45,7 @@ exports.login = async (req, res) => {
                 httpOnly: true, // Frontend JS ise read nahi kar payegi (Secure)
                 secure: process.env.NODE_ENV === 'production', // Sirf HTTPS par chalega
                 maxAge: 30 * 24 * 60 * 60 * 1000 ,// 30 din,
-                  sameSite: 'lax'
+                  sameSite: 'none'
             });
 
             res.json({
@@ -71,7 +71,7 @@ exports.logout = (req, res) => {
     res.clearCookie('token', {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax'
+        sameSite: 'none'
     });
 
     res.status(200).json({ message: 'Logged out successfully! Fir milenge bhai.' });
