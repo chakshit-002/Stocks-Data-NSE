@@ -7,8 +7,13 @@ const getStockNews = async (req, res) => {
     try {
         const finalURL = `${baseURL}?q=${symbol}+stock+india&hl=en-IN&gl=IN&ceid=IN:en`;
         // Google News RSS se news uthao - Ye hamesha articles deta hai
-        const feed = await parser.parseURL(finalURL);
-        
+        const feed = await parser.parseURL({
+            url: finalURL,
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            }
+        });
+
         const articles = feed.items.map(item => ({
             title: item.title,
             url: item.link,
