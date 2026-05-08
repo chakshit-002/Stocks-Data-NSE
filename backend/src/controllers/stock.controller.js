@@ -19,34 +19,130 @@ const DEFAULT_STOCKS = [
 const dataURL = process.env.DATA_FETCH_URL;
 
 // Function to fetch data from NSE archives for a specific date 
+// const fetchAndProcessData = async (date) => {
+//     const url = dataURL.replace('{{DATE}}', date);
+//     try {
+//         const response = await axios.get(url);
+        
+//         const results = [];
+//         return new Promise((resolve, reject) => {
+//             response.data
+//                 .pipe(csv())
+//                 .on('data', (data) => results.push(data))
+//                 .on('end', () => resolve(results))
+//                 .on('error', (err) => {
+//                     // Handle CSV parsing errors
+//                     console.error('CSV parsing error:', err.message);
+//                     reject(new Error('Failed to parse CSV data.'));
+//                 });
+//         });
+//     } catch (err) {
+//         // Handle Axios network errors, like 404 (Not Found)
+//         if (err.response && err.response.status === 404) {
+//             console.error(`Data not found for date ${date}: 404 Not Found`);
+//             throw new Error(`Data not available for date ${date}.`);
+//         } else {
+//             console.error('Error fetching data:', err.message);
+//             throw new Error(`Failed to fetch data from NSE: ${err.message}`);
+//         }
+//     }
+// };
+
+
+// const fetchAndProcessData = async (date) => {
+//     const url = dataURL.replace('{{DATE}}', date);
+
+//     try {
+//         const response = await axios.get(url, {
+//             responseType: 'stream'
+//         });
+
+//         const results = [];
+
+//         return new Promise((resolve, reject) => {
+//             response.data
+//                 .pipe(csv())
+//                 .on('data', (data) => results.push(data))
+//                 .on('end', () => resolve(results))
+//                 .on('error', (err) => {
+//                     console.error('CSV parsing error:', err.message);
+//                     reject(new Error('Failed to parse CSV data.'));
+//                 });
+//         });
+
+//     } catch (err) {
+
+//         console.error("FULL ERROR:", err);
+
+//         if (err.response && err.response.status === 404) {
+//             throw new Error(`Data not available for date ${date}.`);
+//         } else {
+//             throw new Error(`Failed to fetch data from NSE: ${err.message}`);
+//         }
+//     }
+// };
+
 const fetchAndProcessData = async (date) => {
     const url = dataURL.replace('{{DATE}}', date);
+
     try {
-        const response = await axios.get(url);
-        
+
+        const response = await axios.get(url, {
+            responseType: 'stream',
+            headers: {
+                'User-Agent':
+                    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+
+                'Accept':
+                    'text/csv,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+
+                'Referer': 'https://www.nseindia.com/',
+
+                'Accept-Language': 'en-US,en;q=0.9',
+
+                'Connection': 'keep-alive'
+            }
+        });
+
         const results = [];
+
         return new Promise((resolve, reject) => {
+
             response.data
                 .pipe(csv())
                 .on('data', (data) => results.push(data))
-                .on('end', () => resolve(results))
+
+                .on('end', () => {
+                    resolve(results);
+                })
+
                 .on('error', (err) => {
-                    // Handle CSV parsing errors
-                    console.error('CSV parsing error:', err.message);
-                    reject(new Error('Failed to parse CSV data.'));
+                    console.error('CSV Parse Error:', err.message);
+                    reject(err);
                 });
         });
+
     } catch (err) {
-        // Handle Axios network errors, like 404 (Not Found)
-        if (err.response && err.response.status === 404) {
-            console.error(`Data not found for date ${date}: 404 Not Found`);
-            throw new Error(`Data not available for date ${date}.`);
-        } else {
-            console.error('Error fetching data:', err.message);
-            throw new Error(`Failed to fetch data from NSE: ${err.message}`);
+
+        console.error("FULL NSE ERROR:", err.message);
+
+        if (err.response?.status === 403) {
+            throw new Error(
+                'NSE blocked request temporarily (403 Forbidden)'
+            );
         }
+
+        if (err.response?.status === 404) {
+            throw new Error(
+                `Data not available for ${date}`
+            );
+        }
+
+        throw new Error(err.message);
     }
 };
+
+
 
 // Helper function to safely parse CSV fields
 const parseField = (row, fieldName, type = 'float') => {
