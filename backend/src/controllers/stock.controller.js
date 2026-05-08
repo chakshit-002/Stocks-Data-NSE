@@ -22,8 +22,8 @@ const dataURL = process.env.DATA_FETCH_URL;
 const fetchAndProcessData = async (date) => {
     const url = dataURL.replace('{{DATE}}', date);
     try {
-        const response = await axios.get(url);
-        
+        const response = await axios.get(url, { responseType: 'stream' });
+
         const results = [];
         return new Promise((resolve, reject) => {
             response.data
