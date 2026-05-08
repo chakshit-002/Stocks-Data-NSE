@@ -5,9 +5,7 @@ import { toast } from 'react-hot-toast'; // Ya jo bhi library tu use kar raha ho
 const KeepAlive = () => {
     // const backendUrl = import.meta.env.VITE_BACKEND_URL.replace('/api', '') || 'http://localhost:3001'; // Health check root par hota hai
 
-    const backendUrl = (
-        import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001/api'
-    ).replace('/api', '');
+    const backendUrl = import.meta.env.VITE_BACKEND_URL.replace('/api', '');
 
 
     const pingServer = async (isInitial = false) => {
