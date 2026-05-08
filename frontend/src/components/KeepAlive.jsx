@@ -3,7 +3,12 @@ import axios from 'axios';
 import { toast } from 'react-hot-toast'; // Ya jo bhi library tu use kar raha ho
 
 const KeepAlive = () => {
-    const backendUrl = import.meta.env.VITE_BACKEND_URL.replace('/api', '') || 'http://localhost:3001'; // Health check root par hota hai
+    // const backendUrl = import.meta.env.VITE_BACKEND_URL.replace('/api', '') || 'http://localhost:3001'; // Health check root par hota hai
+
+    const backendUrl = (
+        import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001/api'
+    ).replace('/api', '');
+
 
     const pingServer = async (isInitial = false) => {
         if (isInitial) {
@@ -35,7 +40,7 @@ const KeepAlive = () => {
         // 2. Har 5 minute (300,000 ms) mein call karega
         const interval = setInterval(() => {
             pingServer(false);
-        }, 5 * 60 * 1000); 
+        }, 5 * 60 * 1000);
 
         return () => clearInterval(interval); // Cleanup when site closes
     }, []);
