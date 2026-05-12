@@ -1,6 +1,6 @@
 require('dotenv').config();
 const app = require('./src/app');
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 const connectDB = require('./src/db/db');
 const { fetchAndProcessData } = require('./src/controllers/stock.controller'); // Import logic
 const SymbolMaster = require('./src/models/symbolMaster.model');
