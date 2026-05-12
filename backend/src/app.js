@@ -6,7 +6,10 @@ const newsRoutes = require('./routes/news.route');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const app = express();
-const allowedOrigins = [process.env.FRONTEND_URL, "http://localhost:5173"];
+const allowedOrigins = [
+  "https://stock-data-nse.netlify.app",
+  "http://localhost:5173"
+];
 
 app.use(express.json());
 app.use(cors({
