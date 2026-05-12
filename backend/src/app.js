@@ -15,7 +15,12 @@ app.use(cors({
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
-app.options('(.*)', cors());
+app.use((req, res, next) => {
+    if (req.method === 'OPTIONS') {
+        return cors()(req, res, next);
+    }
+    next();
+});
 
 app.use(cookieParser());
 
