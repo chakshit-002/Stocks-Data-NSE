@@ -8,14 +8,15 @@ const cors = require('cors');
 const app = express();
 const allowedOrigins = [process.env.FRONTEND_URL, "http://localhost:5173"];
 
+app.use(express.json());
 app.use(cors({
     origin: allowedOrigins,
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
+app.options('*', cors());
 
-app.use(express.json());
 app.use(cookieParser());
 
 

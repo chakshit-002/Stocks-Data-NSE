@@ -19,7 +19,7 @@ exports.register = async (req, res) => {
         // --- COOKIE SET KARO ---
         res.cookie('token', token, {
             httpOnly: true, // Sabse important: JS ise access nahi kar payegi (XSS protection)
-            secure: false,  // Development mein false rakho, production (HTTPS) mein true
+            secure: process.env.NODE_ENV === 'production' ? true : false, // secure: true, Development mein false rakho, production (HTTPS) mein true
             maxAge: 30 * 24 * 60 * 60 * 1000, // 30 din
             sameSite: 'none' // Cross-site request protection
         });
@@ -43,9 +43,9 @@ exports.login = async (req, res) => {
             // Cookie mein token set kar rahe hain
             res.cookie('token', token, {
                 httpOnly: true, // Frontend JS ise read nahi kar payegi (Secure)
-                secure: process.env.NODE_ENV === 'production', // Sirf HTTPS par chalega
-                maxAge: 30 * 24 * 60 * 60 * 1000 ,// 30 din,
-                  sameSite: 'none'
+                secure: process.env.NODE_ENV === 'production' ? true : false, // Sirf HTTPS par chalega
+                maxAge: 30 * 24 * 60 * 60 * 1000,// 30 din,
+                sameSite: 'none'
             });
 
             res.json({
@@ -70,7 +70,7 @@ exports.logout = (req, res) => {
     // Cookie ko clear karo
     res.clearCookie('token', {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: process.env.NODE_ENV === 'production' ? true : false,
         sameSite: 'none'
     });
 
